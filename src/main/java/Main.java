@@ -1,10 +1,6 @@
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -14,52 +10,46 @@ public class Main {
 
     public static void main(String[] args) {
 
-        String textoDescriptografado;
-
+        String decryptedText;
         Connection request = new Connection();
-        String result = request.getRequest();
-
-        FileWriter file;
-
-        String sha = "";
+        String summary;
 
         try {
+            // sending GET
+            String result = request.getRequest();
+
+            // creating json file
             BufferedWriter writer = new BufferedWriter(new FileWriter("answer.json"));
-
             JSONObject jsonObj = new JSONObject(result);
-            Integer shift = jsonObj.getInt("numero_casas");
-            String texto = jsonObj.getString("cifrado");
 
-            CaesarCipher tc = new CaesarCipher();
+            // getting values from file
+            int shift = jsonObj.getInt("numero_casas");
+            String text = jsonObj.getString("cifrado");
 
-            textoDescriptografado = tc.dencryp(texto, shift);
+            // decrypting plain text
+            CaesarCipher encryptedText = new CaesarCipher();
+            decryptedText = encryptedText.dencryp(text, shift);
+            jsonObj.put("decifrado", decryptedText);
 
-            jsonObj.put("decifrado", textoDescriptografado);
+            // create the cryptographic summary
+            CryptographicSummary sha = new CryptographicSummary();
+            summary = sha.summary(decryptedText);
 
-            MessageDigest digest = MessageDigest.getInstance("SHA-1");
-            digest.reset();
-            digest.update(textoDescriptografado.getBytes("utf8"));
-            sha = String.format("%040x", new BigInteger(1, digest.digest()));
-
-            jsonObj.put("resumo_criptografico", sha);
-
+            // adding cryptographic summary to file
+            jsonObj.put("resumo_criptografico", summary);
             writer.write(jsonObj.toString());
             writer.close();
 
+            // convert the byte array to a Base64 string
             String json = jsonObj.toString();
-            //System.out.println(jsonObj.toString());
             String encodedString = Base64.getEncoder().encodeToString(json.getBytes());
             byte[] decodedBytes = Base64.getDecoder().decode(encodedString);
-            String decodedString = new String(decodedBytes);
-            /*byte[] byt = System.Text.Encoding.UTF8.GetBytes(jsonObj.toString());
-            // convert the byte array to a Base64 string
-            strModified = Convert.ToBase64String(byt);*/
 
-
+            // Sending POST
             result = request.postRequest("answer", decodedBytes);
             System.out.println(result);
 
-        } catch (IOException | NoSuchAlgorithmException ex) {
+        } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
