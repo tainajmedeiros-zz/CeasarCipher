@@ -4,59 +4,66 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class CaesarCipher {
-
-    private int i;
-    private int n, aux;
-    private String ciphertext = "";
     private List<Character> specialChars;
 
+    // constructor
     CaesarCipher() {
-        this.specialChars = new ArrayList<Character>();
+        // creating list of characters that should be ignored
+        this.specialChars = new ArrayList<>();
         this.specialChars.add('.');
         this.specialChars.add(' ');
         this.specialChars.add(',');
     }
 
+    // function responsible for decrypting the text
     public String dencryp(String text, int shift) {
-        Character letter = ' ';
-        n = text.length();
+        String cipherText = "";
+        char letter;
+        int n = text.length();
+        // calling function to remove accents
         text = removeAccents(text);
 
-        for (i=0; i<n; i++) {
+        // scrolling through ciphertext
+        for (int i=0; i<n; i++) {
             letter = text.charAt(i);
+            // checking what is the character type
             if ( !this.isCharDencryp(letter) ) {
-                ciphertext = ciphertext + (char)(letter);
+                cipherText = cipherText + (char) (letter);
             } else {
+                // calling the function responsible for the rotation of the alphabet
                 letter = rotateAlphabet(letter, shift);
-                ciphertext = ciphertext + (char)(letter - shift);
+                cipherText = cipherText + (char)(letter - shift);
 
             }
         }
-        ciphertext = ciphertext.toLowerCase();
-        return ciphertext;
+        // lowering the text
+        cipherText = cipherText.toLowerCase();
+
+        return cipherText;
     }
 
+    // function responsible for checking if the character should be ignored
     public boolean isCharDencryp(char c){
-        if(Character.isDigit(c) || this.specialChars.contains(c))
-            return false;
-
-        return true;
+        return !Character.isDigit(c) && !this.specialChars.contains(c);
     }
 
+    //function responsible for removing accents from text
     public String removeAccents(String text) {
-        //return Normalizer.normalize(text, Normalizer.Form.NFD).replaceAll("[^\\p{ASCII}]", "");
         String nfdNormalizedString = Normalizer.normalize(text, Normalizer.Form.NFD);
         Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
         return pattern.matcher(nfdNormalizedString).replaceAll("");
     }
 
+    // function responsible for rotating the alphabet
     public char rotateAlphabet(char letter, int shift){
         char result;
-        aux = Character.getNumericValue(letter);
+        int aux = Character.getNumericValue(letter);
+        // check if the rotation is greater than the alphabet
         if((aux-shift) < 10){
             result = (char)('z' - (9 - aux));
             return result;
         }
         return letter;
     }
+
 }
